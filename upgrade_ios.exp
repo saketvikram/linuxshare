@@ -1,0 +1,85 @@
+#!/bin/expect
+# Script for upgrading IOS on Cisco switches in a stack
+# Connects to the stack taking user name from the
+# command-line as parameters
+# Parameters
+# 1sti - host name
+# Using SSH protocol
+
+# After successful authentication new IOS image file
+# is copied from a TFTP server to every switch in the stack
+# Then each IOS image is verified using MD5 checksum
+# New IOS is set for booting
+# Finally all configuration changes are saved
+# Swtich stack should be rebooted manualy from the network administrator
+
+set timeout -1
+set host [lindex $argv 0]
+set user georgiev
+
+# Number of Cisco switches in a stack
+set switch_counter 8
+set ios_name c2960x-universalk9-mz.152-3.E1.bin
+set ios_checksum da08a2cb575ff8fa225a2269fb309298
+
+# Logging to the switch stack
+stty -echo
+send_user "Password (for $user) on $host: "
+expect_user -re "(.*)\n"
+set password $expect_out(1,string)
+stty echo
+
+send_user "\nConnecting to Cisco switch $host through SSH\n"
+spawn ssh $user@$host
+
+expect -re "(.*)assword: "
+send -- "$password\r"
+expect -re "(.*)>"
+send -- "enable\r"
+expect  ": "
+send -- "$password\r"
+
+
+
+# Uploading new IOS to each switch member in the stack
+for {set i 1} {$i <= $switch_counter} {incr i 1} {
+   expect -re "sw(.*)#"
+   send -- "copy tftp://morpork/cisco/$ios_name flash$i:/\r"
+   expect -re "Destination filename (.*)"
+   send -- "\r"
+}
+
+# Verifying IOS image on the flash memory of every switch from the stack
+for {set i 1} {$i <= $switch_counter} {incr i 1} {
+   expect -re "sw(.*)#"
+   send -- "verify /md5 flash$i:/$ios_name\r"
+   expect -re "sw(.*)#"
+   send -- "The checksum shoud be: $ios_checksum\r"
+}
+
+# Begin of Cisco switch configuration
+expect -re "sw(.*)#"
+send -- "configure terminal\r"
+
+expect -re "sw(.*)#"
+send -- "no boot system switch all\r"
+
+# Setting new IOS for booting
+expect -re "sw(.*)#"
+send -- "boot system switch flash:/$ios_name\r"
+
+# Setting new IOS for booting он every switch from the stack
+#for {set i 1} {$i <= $switch_counter} {incr i 1} {
+#   expect -re "sw(.*)#"
+#   send -- "boot system switch $i flash$i:/$ios_name\r"
+#}
+
+# End of Cisco switch configuration, saving changes
+expect -re "sw(.*)#"
+send -- "end\r"
+#expect -re "sw(.*)#"
+#send -- "write memory\r"
+expect -re "sw(.*)#"
+send -- "exit\r"
+
+exit

@@ -1,0 +1,2 @@
+#!/bin/bash
+tac_plus -C /etc/tac_plus/tac_plus.conf -B 147.251.96.156 -g -d 256

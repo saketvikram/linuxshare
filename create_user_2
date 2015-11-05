@@ -1,0 +1,6 @@
+#!/bin/sh
+echo -n "Enter a username: "
+read username
+sudo useradd -m $username
+echo "Enter a password for the new user"
+sudo passwd $username

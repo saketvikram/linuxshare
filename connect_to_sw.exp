@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+# Connect to a Cisco switch taking user name and password from the
+# command-line as parameters and using SSH protocol
+# Parameters
+# 1st user name
+# 2nd host name
+
+set timeout -1
+set user georgiev
+set host [lindex $argv 0]
+set password <your password>
+
+#stty -echo
+#send_user "Password (for $user) on $host: "
+#expect_user -re "(.*)\n"
+#set password $expect_out(1,string)
+#stty echo
+send_user "\nConnecting to Cisco switch $host through SSH\n"
+spawn ssh $user@$host
+# Connects to another network device via SSH for the first time
+# Gets RSA fingerprints
+# expect  "RSA key fingerprint"
+# send -- "yes\r"
+expect -re "(.*)assword: "
+send -- "$password\r"
+expect -re "(.*)>"
+send -- "enable\r"
+expect  ": "
+send -- "$password\r"
+expect -re "(.*)#"
+interact
+exit
+# Last update: 30 Oct 2015

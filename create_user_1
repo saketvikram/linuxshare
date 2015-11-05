@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "Tvorda nového uživatele $1"
+sudo useradd -m $1
+echo "\nPassword:"
+sudo passwd $1

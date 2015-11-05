@@ -1,0 +1,60 @@
+#!/usr/bin/expect -f
+# Connect to a Cisco switch taking user name and password from the
+# command-line as parameters and using SSH protocol
+# Parameters
+# 1sti - host name
+
+# After successful authentication new IOS image file is verified
+# using MD5 checksum
+
+set timeout -1
+set host [lindex $argv 0]
+set user georgiev
+set ios_name c2960x-universalk9-mz.152-3.E1.bin
+
+stty -echo
+send_user "Password (for $user) on $host: "
+expect_user -re "(.*)\n"
+set password $expect_out(1,string)
+stty echo
+
+send_user "\nConnecting to Cisco switch $host through SSH\n"
+spawn ssh $user@$host
+
+expect -re "(.*)assword: "
+send -- "$password\r"
+expect -re "(.*)>"
+send -- "enable\r"
+expect  ": "
+send -- "$password\r"
+
+
+# New IOS verification using MD5 checksum
+expect -re "sw(.*)#"
+send -- "verify /md5 flash1:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "verify /md5 flash2:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "verify /md5 flash3:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "verify /md5 flash4:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "verify /md5 flash5:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "verify /md5 flash6:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "verify /md5 flash7:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "verify /md5 flash8:/$ios_name\r"
+
+expect -re "sw(.*)#"
+send -- "exit\r"
+
+exit
